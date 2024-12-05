@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PlusCircle } from 'lucide-react';
 import type { Contact } from '../types/Contact';
+import { formatPhoneForWhatsApp } from '../utils/phoneFormat';
 
 interface ContactFormProps {
   onSubmit: (contact: Omit<Contact, 'id' | 'createdAt'>) => void;
@@ -19,7 +20,12 @@ export function ContactForm({ onSubmit }: ContactFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Telefon numarasını formatla
+    const formattedData = {
+      ...formData,
+      phone: formatPhoneForWhatsApp(formData.phone)
+    };
+    onSubmit(formattedData);
     setFormData({ 
       facebookId: '',
       name: '', 

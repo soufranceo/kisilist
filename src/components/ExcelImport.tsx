@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import type { Contact } from '../types/Contact';
+import { formatPhoneForWhatsApp } from '../utils/phoneFormat';
 
 interface ExcelImportProps {
   onImport: (contacts: Omit<Contact, 'id' | 'createdAt'>[]) => void;
@@ -24,7 +25,7 @@ export function ExcelImport({ onImport }: ExcelImportProps) {
 
       const contacts = jsonData.map((row: any) => ({
         facebookId: row['id'] || '',
-        phone: row['phone'] || '',
+        phone: formatPhoneForWhatsApp(row['phone']) || '',
         name: row['name'] || '',
         lastname: row['lastname'] || '',
         gender: row['gender'] || '',

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { MessageSquare, Copy, Download, Loader2 } from 'lucide-react';
+import { MessageSquare, Copy, Download } from 'lucide-react';
 import type { Contact } from '../types/Contact';
 import { generateVCF, downloadVCF } from '../utils/vcf';
+import { formatPhoneForWhatsApp } from '../utils/phoneFormat';
 
 interface BulkMessageProps {
   contacts: Contact[];
@@ -12,28 +13,20 @@ interface BulkMessageProps {
 export function BulkMessage({ contacts, selectedContacts }: BulkMessageProps) {
   const [message, setMessage] = useState('');
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const getSelectedContacts = () => {
     return contacts.filter(contact => selectedContacts.includes(contact.id));
   };
 
-  const sendMessages = async () => {
-    setLoading(true);
+  const sendMessages = () => {
     const selectedContacts = getSelectedContacts();
     const encodedMessage = encodeURIComponent(message);
     
-    try {
-      // Send individual messages
-      selectedContacts.forEach(contact => {
-        const url = `https://wa.me/${contact.phone}?text=${encodedMessage}`;
-        window.open(url, '_blank');
-      });
-    } catch (error) {
-      console.error('Mesaj gönderme hatası:', error);
-    } finally {
-      setLoading(false);
-    }
+    selectedContacts.forEach(contact => {
+      const formattedPhone = formatPhoneForWhatsApp(contact.phone);
+      const url = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+      window.open(url, '_blank');
+    });
   };
 
   const exportVCF = () => {
@@ -44,7 +37,7 @@ export function BulkMessage({ contacts, selectedContacts }: BulkMessageProps) {
 
   const copyPhonesToClipboard = () => {
     const phones = getSelectedContacts()
-      .map(contact => contact.phone)
+      .map(contact => formatPhoneForWhatsApp(contact.phone))
       .join('\n');
     navigator.clipboard.writeText(phones).then(() => {
       setShowCopiedMessage(true);
@@ -67,14 +60,10 @@ export function BulkMessage({ contacts, selectedContacts }: BulkMessageProps) {
         <div className="space-y-3">
           <button
             onClick={sendMessages}
-            disabled={selectedContacts.length === 0 || !message || loading}
+            disabled={selectedContacts.length === 0 || !message}
             className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <MessageSquare size={20} />
-            )}
+            <MessageSquare size={20} />
             WhatsApp Mesajı Gönder ({selectedContacts.length})
           </button>
 

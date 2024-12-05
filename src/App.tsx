@@ -4,37 +4,24 @@ import { ContactForm } from './components/ContactForm';
 import { ContactList } from './components/ContactList';
 import { ExcelImport } from './components/ExcelImport';
 import { BulkMessage } from './components/BulkMessage';
-import { LoginForm } from './components/LoginForm';
-import type { Contact, AuthState } from './types/Contact';
+import type { Contact } from './types/Contact';
+import { saveContacts, loadContacts } from './utils/storage';
 
 export default function App() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
-  const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false });
   const [showForm, setShowForm] = useState(false);
 
+  // Load contacts from localStorage on initial render
   useEffect(() => {
-    const savedAuth = localStorage.getItem('auth');
-    if (savedAuth) {
-      const parsedAuth = JSON.parse(savedAuth);
-      const lastLoginTime = new Date(parsedAuth.lastLoginTime);
-      const now = new Date();
-      const hoursSinceLogin = (now.getTime() - lastLoginTime.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursSinceLogin < 24) {
-        setAuth({ isAuthenticated: true, lastLoginTime });
-      }
-    }
+    const savedContacts = loadContacts();
+    setContacts(savedContacts);
   }, []);
 
-  const handleLogin = () => {
-    const newAuth = { 
-      isAuthenticated: true, 
-      lastLoginTime: new Date() 
-    };
-    setAuth(newAuth);
-    localStorage.setItem('auth', JSON.stringify(newAuth));
-  };
+  // Save contacts to localStorage whenever they change
+  useEffect(() => {
+    saveContacts(contacts);
+  }, [contacts]);
 
   const addContact = (newContact: Omit<Contact, 'id' | 'createdAt'>) => {
     const contact: Contact = {
@@ -42,13 +29,13 @@ export default function App() {
       id: crypto.randomUUID(),
       createdAt: new Date(),
     };
-    setContacts([...contacts, contact]);
+    setContacts(prevContacts => [...prevContacts, contact]);
     setShowForm(false);
   };
 
   const deleteContact = (id: string) => {
-    setContacts(contacts.filter(contact => contact.id !== id));
-    setSelectedContacts(selectedContacts.filter(contactId => contactId !== id));
+    setContacts(prevContacts => prevContacts.filter(contact => contact.id !== id));
+    setSelectedContacts(prevSelected => prevSelected.filter(contactId => contactId !== id));
   };
 
   const handleExcelImport = (importedContacts: Omit<Contact, 'id' | 'createdAt'>[]) => {
@@ -57,7 +44,7 @@ export default function App() {
       id: crypto.randomUUID(),
       createdAt: new Date()
     }));
-    setContacts([...contacts, ...newContacts]);
+    setContacts(prevContacts => [...prevContacts, ...newContacts]);
   };
 
   const toggleSelectContact = (id: string) => {
@@ -69,16 +56,14 @@ export default function App() {
   };
 
   const handleMessageSent = (contactId: string) => {
-    setContacts(contacts.map(contact => 
-      contact.id === contactId 
-        ? { ...contact, lastMessageDate: new Date() }
-        : contact
-    ));
+    setContacts(prevContacts =>
+      prevContacts.map(contact =>
+        contact.id === contactId
+          ? { ...contact, lastMessageDate: new Date() }
+          : contact
+      )
+    );
   };
-
-  if (!auth.isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Trash2, Facebook, AlertCircle, ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
 import type { Contact } from '../types/Contact';
+import { formatPhoneForWhatsApp } from '../utils/phoneFormat';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -54,13 +55,15 @@ export function ContactList({ contacts, onDelete, selectedContacts, onToggleSele
       setShowWarning(contact.id);
       return;
     }
-    window.open(`https://wa.me/${contact.phone}`, '_blank');
+    const formattedPhone = formatPhoneForWhatsApp(contact.phone);
+    window.open(`https://wa.me/${formattedPhone}`, '_blank');
     onMessageSent(contact.id);
   };
 
   const confirmSendMessage = (contact: Contact) => {
     if (window.confirm('Bu kişiye daha önce mesaj gönderilmiş. Tekrar göndermek istiyor musunuz?')) {
-      window.open(`https://wa.me/${contact.phone}`, '_blank');
+      const formattedPhone = formatPhoneForWhatsApp(contact.phone);
+      window.open(`https://wa.me/${formattedPhone}`, '_blank');
       onMessageSent(contact.id);
     }
     setShowWarning(null);

@@ -1,3 +1,5 @@
+import { formatPhoneForWhatsApp } from './phoneFormat';
+
 export function generateVCF(contacts: Array<{name: string; lastname: string; phone: string}>) {
   let vcf = '';
   contacts.forEach(contact => {
@@ -5,7 +7,7 @@ export function generateVCF(contacts: Array<{name: string; lastname: string; pho
     vcf += 'VERSION:3.0\n';
     vcf += `FN:${contact.name} ${contact.lastname}\n`;
     vcf += `N:${contact.lastname};${contact.name};;;\n`;
-    vcf += `TEL;TYPE=CELL:${contact.phone}\n`;
+    vcf += `TEL;TYPE=CELL:${formatPhoneForWhatsApp(contact.phone)}\n`;
     vcf += 'END:VCARD\n';
   });
   return vcf;
